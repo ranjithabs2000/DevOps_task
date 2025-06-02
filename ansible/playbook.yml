@@ -1,0 +1,37 @@
+- hosts: web
+  become: true
+  tasks:
+    - name: Install Docker & prereqs
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Install NGINX
+      apt:
+        name: nginx
+        state: present
+
+    - name: Deploy NGINX reverse-proxy config
+      copy:
+        src: ../nginx/yii2.conf
+        dest: /etc/nginx/conf.d/yii2.conf
+
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Initialise Docker Swarm (idempotent)
+      shell: docker swarm init || true
+
+    - name: Deploy / update Yii2 service
+      shell: |
+        docker service rm yii2-app || true
+        docker service create --name yii2-app -p 8080:80 ranjitharanjitha876/yii2-app
