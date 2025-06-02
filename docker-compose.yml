@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  yii2:
+    build: .
+    image: ranjitharanjitha876/yii2-app
+    ports:
+      - "8080:80"
