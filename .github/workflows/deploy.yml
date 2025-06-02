@@ -1,0 +1,38 @@
+mkdir -p .github/workflows
+cat > .github/workflows/deploy.yml <<'EOF'
+name: CI/CD – Build & Deploy Yii2 Docker Swarm
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t ranjitharanjitha876/yii2-app:latest .
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.Ranju@2000 }}" | docker login -u "${{ secrets.ranjitharanjitha876@gmail.com }}" --password-stdin
+
+    - name: Push image
+      run: docker push YOUR_DOCKERHUB/yii2-app:latest
+
+    - name: SSH into EC2 & update Swarm
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker service update --image ranjitharanjitha876/yii2-app:latest yii2-app || \
+          docker service create --name yii2-app -p 8080:80 ranjitharanjitha876/yii2-app:latest
+EOF
+
+git add .github/workflows/deploy.yml
+git commit -m "Add GitHub Actions pipeline"
